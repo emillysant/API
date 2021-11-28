@@ -4,6 +4,7 @@ import cors from "cors";
 import { psychologists } from "./data";
 import { users } from "./data";
 import { user } from "./types";
+import { psychologist } from "./types";
 
 const app = express();
 app.use(express.json());
@@ -59,7 +60,6 @@ app.post("/cadastro", (req: Request, res: Response) => {
 app.post("/login", (req: Request, res: Response) => {
   try {
     let result: user[] = users;
-    const userLog = result.find((user) => user.email == req.body.email);
 
     if (req.body.email && req.body.password) {
       const userLog = result.find((user) => user.email == req.body.email);
@@ -99,7 +99,6 @@ app.get("/profissionais", (req: Request, res: Response) => {
   }
 });
 
-
 // ENDPOINT 4 - BUSCAR UM profissionais de psicologia
 app.get("/profissionais/:id", (req: Request, res: Response) => {
   const token = req.headers.authorization;
@@ -110,9 +109,40 @@ app.get("/profissionais/:id", (req: Request, res: Response) => {
     return psychologist.id === Number(id);
   });
 
-  if(token && result) {
-    res.send(result)
+  if (token && result) {
+    res.send(result);
   } else {
-    res.status(404).send("Profissional não encontrado")
+    res.status(404).send("Profissional não encontrado");
+  }
+});
+
+// ENDPOINT 5 - CADASTRAR PROFISSIONAIS DE PSICOLOGIA
+app.post("/cadastrarprofissionais", (req: Request, res: Response) => {
+  try {
+    let userId: number = psychologists.length + 1;
+
+    let newUser: psychologist = {
+      id: userId,
+      name: req.body.name,
+      email: req.body.email,
+      description: req.body.description,
+      image: req.body.description,
+      field: req.body.field,
+    };
+
+    if (req.body.name && req.body.email) {
+      psychologists.push(newUser);
+      const token = jwt.sign({ userId }, SECRET, { expiresIn: 300 });
+      //console.log("Novo profissional adicionado");
+      return res.json({ auth: true, token });
+    }
+
+    res.status(401).end();
+  } catch (error: any) {
+    if (res.statusCode === 200) {
+      res.status(500).end();
+    } else {
+      res.end();
+    }
   }
 });
